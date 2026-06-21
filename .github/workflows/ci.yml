@@ -1,40 +1,25 @@
-name: Release Chrome Extension
+name: Chrome Extension CI
 
 on:
   push:
-    tags:
-      - "v*"
+  pull_request:
 
 permissions:
-  contents: write
-  id-token: write
-  attestations: write
+  contents: read
 
 jobs:
-  release:
+  validate:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Validate manifest
+      - name: Validate manifest.json exists
         run: test -f manifest.json
 
-      - name: Create final package
-        run: |
-          zip -r extension.zip . \
-            -x "*.git*" \
-            -x "*.github*"
+      - name: Validate manifest syntax
+        run: cat manifest.json | jq .
 
-      - name: Generate SLSA provenance attestation
-        uses: actions/attest-build-provenance@v2
-        with:
-          subject-path: extension.zip
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: extension.zip
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Check project structure
+        run: ls -la
